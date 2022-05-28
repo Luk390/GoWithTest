@@ -116,6 +116,41 @@ func TestWalk(t *testing.T) {
 		assertContains(t, got, "Bristol")
 		assertContains(t, got, "La la Land")
 	})
+	t.Run("channels", func(t *testing.T) {
+		ch := make(chan Profile)
+
+		go func() {
+			ch <- Profile{32, "Bristol"}
+			ch <- Profile{29, "Bielsko"}
+			close(ch)
+		}()
+		var got []string
+		want := []string{"Bristol", "Bielsko"}
+
+		walk(ch, func(input string){
+			got = append(got, input)
+		})
+
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("got %v want %v", got, want)
+		}
+	})
+	t.Run("functions", func(t *testing.T) {
+		aFn := func () (Profile, Profile) {
+			return Profile{32, "Bristol"}, Profile{29, "Katowice"}
+		}
+
+		var got []string
+		want := []string{"Bristol", "Katowice"}
+
+		walk(aFn, func(input string) {
+			got = append(got, input)
+		})
+
+		if !reflect.DeepEqual(got, want) {
+			t.Errorf("got %v want %v", got, want)
+		}
+	})
 }
 func assertContains(t testing.TB, got []string, want string) {
 	t.Helper()
